@@ -2,52 +2,26 @@
 
 namespace glasswalllab\dearconnector;
 
-//use glasswalllab\keypayconnector\TokenStore\TokenCache;
-//use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class DearConnector
 {
-/*     public function CallAPI($endpoint,$method,$body)
+    public function CallDEAR($endpoint,$method,$body)
     {  
-        //Could move the below to job - but was having issues with the return
-        $tokenCache = new TokenCache();
-        $accessToken = $tokenCache->getAccessToken(config('keypayConnector.provider'));
-
-        $url = config('keypayConnector.baseUrl').$endpoint;
-
-        $options['headers']['Content-Type'] = 'application/json';
-        //$options['headers']['If-Match'] = '*';
-
-        $options['body'] = $body; //json encoded value
-
-        $this->oauthClient = new \League\OAuth2\Client\Provider\GenericProvider([
-            'clientSecret'            => config('keypayConnector.appSecret'),
-            'clientId'                => config('keypayConnector.appId'),
-            'redirectUri'             => config('keypayConnector.redirectUri'),
-            'urlAuthorize'            => config('keypayConnector.authority').config('keypayConnector.authoriseEndpoint'),
-            'urlAccessToken'          => config('keypayConnector.authority').config('keypayConnector.tokenEndpoint'),
-            'urlResourceOwnerDetails' => config('keypayConnector.resource'),
-          ]);
-
+        $url = config('DearConnector.baseUrl').$endpoint;
+        
+        dd("hello World");
         try
         {
-            $request = $this->oauthClient->getAuthenticatedRequest(
-                $method,
-                $url,
-                $accessToken,
-                $options,
-            );
+            $response = Http::withHeaders([
+                'api-auth-accountid' => config('DearConnector.accountid'),
+                'api-auth-applicationkey' => config('DearConnector.applicationkey')
+            ])->retry(3, 500)->acceptJson()->get($url, $body);
 
-            $response = $this->oauthClient->getResponse($request);
             return $response->getBody()->getContents();
 
         } catch (Exception $ex) {
             return($ex);
         }
-    } */
-
-/*     public function CallAPIQueue($endpoint,$method,$body)
-    {  
-        $call = CallAPI::dispatch($endpoint,$method,$body);
-    } */
+    }
 }
