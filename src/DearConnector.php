@@ -10,7 +10,7 @@ class DearConnector
     {  
         $url = config('DearConnector.baseUrl').$endpoint;
         
-        dd("hello World");
+        dd($url);
         try
         {
             $response = Http::withHeaders([
