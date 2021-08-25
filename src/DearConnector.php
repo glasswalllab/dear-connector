@@ -3,12 +3,12 @@
 namespace glasswalllab\dearconnector;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\RequestException;
 
 class DearConnector
 {
     const CONTENT_TYPE = 'application/json';
     const LIMIT = 100;
-    const PAGE = 1;
 
     protected function getHeaders()
     {
@@ -23,41 +23,43 @@ class DearConnector
     {  
         $url = config('DearConnector.baseUrl').$endpoint;
         
+        
         try
         {
-
-        //add request to DB
-        //pagination?
-        //API call limit of 60 per minute
-
-
-            dd($this->getHeaders());
+            //add request to DB
 
             if ($method == 'POST' || $method == 'PUT') {
                 $requestParams['body'] = json_encode($parameters);
+                $responses = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url,$requestParams)->body();
             } else {
-                $requestParams['query'] = $parameters;
-            }
+                $url_first = $url.'?page=1&limit='.self::LIMIT;
+                $response = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url_first)->body();
 
-            $response = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url, $requestParams);
+                $total = json_decode($response)->Total;
+                if(isset($total)){
+                    $responses[] = $response;
+                    if($total > self::LIMIT)
+                    {                
+                        for($i=2;$i<(ceil($total/self::LIMIT)); $i++)
+                        {
+                            $url_additional = $url.'?page='.$i.'&limit='.self::LIMIT;
+                            $response = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url_additional)->body();
+                            $responses[] = $response;
+                        }
+                    }
+                }
+            }
+            
+            return $responses;
 
             //add response to DB
-
-            //Handle errors
-            return $response->getBody()->getContents();
-
-        } catch (ClientException $clientException) {
-            return $clientException;
-        }
-        
-        catch (ServerException $serverException) {
-
-            if ($ex->getResponse()->getStatusCode() === 503) {
+        } catch (RequestException $e) {
+            if ($e->getCode() === 503) {
                 // API limit exceeded
                 sleep(5);
                 return $this->CallDEAR($endpoint,$method,$body);
             }
-            return $serverException;
+            return $e;
         }
     }
 }
