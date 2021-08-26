@@ -80,32 +80,36 @@ class DearConnector
                 $log_first_call->response = $response;
                 $log_first_call->save();
 
+                $json = json_decode($response);
+
                 //Check total items, returned with first call
-                $total = json_decode($response)->Total;
+                if(!is_null($json)) {
+                    $total = $json->Total;
 
-                if(isset($total)){
-                    $responses[] = $response;
-                    if($total > self::LIMIT)
-                    {   
-                        //Start for loop at 2, as page 1 has already been retrieved - ceil = rounds up to nearest whole number             
-                        for($i=$this->page;$i<=(ceil($total/self::LIMIT)); $i++)
-                        {
-                            $pageLimitParams = array('page' => $i,'limit' => self::LIMIT);
-                            $requestParams = array_merge($parameters,$pageLimitParams);
+                    if(isset($total)) {
+                        $responses[] = $response;
+                        if($total > self::LIMIT)
+                        {   
+                            //Start for loop at 2, as page 1 has already been retrieved - ceil = rounds up to nearest whole number             
+                            for($i=$this->page;$i<=(ceil($total/self::LIMIT)); $i++)
+                            {
+                                $pageLimitParams = array('page' => $i,'limit' => self::LIMIT);
+                                $requestParams = array_merge($parameters,$pageLimitParams);
 
-                            $this->page = $i;
-                            
-                            $log_additional_call = ApiLog::create([
-                                'resource' => $url,
-                                'method' => $method,
-                                'request' => json_encode($requestParams),
-                            ]);
+                                $this->page = $i;
+                                
+                                $log_additional_call = ApiLog::create([
+                                    'resource' => $url,
+                                    'method' => $method,
+                                    'request' => json_encode($requestParams),
+                                ]);
 
-                            $response = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url,$requestParams)->body();
-                            $responses[] = $response;
+                                $response = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url,$requestParams)->body();
+                                $responses[] = $response;
 
-                            $log_additional_call->response = $response;
-                            $log_additional_call->save();
+                                $log_additional_call->response = $response;
+                                $log_additional_call->save();
+                            }
                         }
                     }
                 }
