@@ -11,6 +11,8 @@ class DearConnector
     const CONTENT_TYPE = 'application/json';
     const LIMIT = 100;
 
+    private $page = 2;
+
     protected function getHeaders()
     {
         return [
@@ -62,9 +64,10 @@ class DearConnector
                     if($total > self::LIMIT)
                     {   
                         //Start for loop at 2, as page 1 has already been retrieved - ceil = rounds up to nearest whole number             
-                        for($i=2;$i<(ceil($total/self::LIMIT)); $i++)
+                        for($i=$this->page;$i<(ceil($total/self::LIMIT)); $i++)
                         {
                             $url_additional = $url.'?page='.$i.'&limit='.self::LIMIT;
+                            $this->page = $i;
                             
                             $log_additional_call = ApiLog::create([
                                 'resource' => $url_additional,
