@@ -39,8 +39,6 @@ class DearConnector
 
                 $baseCall = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson();
 
-                //dd($requestParams);
-
                 switch($method) {
                     case 'POST':
                         $responses = $baseCall->post($url,$parameters)->body();
