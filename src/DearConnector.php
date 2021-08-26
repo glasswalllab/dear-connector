@@ -26,6 +26,9 @@ class DearConnector
     {  
         $url = config('DearConnector.baseUrl').$endpoint;
         
+        $responses = [];
+        $method = strtoupper($method);
+        
         try
         {
             //POST or PUT request - contains parameter data, no pagination required - return array
