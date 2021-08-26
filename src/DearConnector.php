@@ -29,22 +29,41 @@ class DearConnector
         try
         {
             //POST or PUT request - contains parameter data, no pagination required - return array
-            if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH') {
-                $requestParams['body'] = json_encode($parameters);
-                
+            if ($method === 'POST' || $method === 'PUT' || $method === 'PATCH' || $method === 'DELETE') {
+
                 $log = ApiLog::create([
                     'resource' => $url,
                     'method' => $method,
-                    'request' => json_encode($requestParams),
+                    'request' => json_encode($parameters),
                 ]);
 
-                $responses = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url,$requestParams)->body();
+                $baseCall = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson();
+
+                //dd($requestParams);
+
+                switch($method) {
+                    case 'POST':
+                        $responses = $baseCall->post($url,$parameters)->body();
+                    break;
+
+                    case 'PUT':
+                        $responses = $baseCall->put($url,$parameters)->body();
+                    break;
+
+                    case 'PATCH':
+                        $responses = $baseCall->patch($url,$parameters)->body();
+                    break;
+
+                    case 'DELETE':
+                        $responses = $baseCall->delete($url,$parameters)->body();
+                    break;
+                }
                 
                 $log->response = $responses;
                 $log->save();
 
-            //Any other request (GET) - no parameter, check for pagination - return array    
-            } else {
+            //GET request - check for pagination - return array    
+            } elseif($method === 'GET') {
                 
                 $pageLimitParams = array('page' => 1,'limit' => self::LIMIT);
                 $requestParams = array_merge($parameters,$pageLimitParams);
