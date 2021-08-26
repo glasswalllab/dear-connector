@@ -22,7 +22,7 @@ class DearConnector
         ];
     }
 
-    public function CallDEAR($endpoint,$method,$parameters)
+    public function CallDEAR($endpoint,$method, array $parameters)
     {  
         $url = config('DearConnector.baseUrl').$endpoint;
         
@@ -45,11 +45,12 @@ class DearConnector
 
             //Any other request (GET) - no parameter, check for pagination - return array    
             } else {
-                //$url_first_call = $url.'?page=1&limit='.self::LIMIT;
-                $requestParams['query'] = array('page' => 1,'limit' => self::LIMIT);
+                
+                $pageLimitParams = array('page' => 1,'limit' => self::LIMIT);
+                $requestParams = array_merge($parameters,$pageLimitParams);
                 
                 $log_first_call = ApiLog::create([
-                    'resource' => $url_first_call,
+                    'resource' => $url,
                     'method' => $method,
                     'request' => json_encode($requestParams),
                 ]);
@@ -67,18 +68,20 @@ class DearConnector
                     if($total > self::LIMIT)
                     {   
                         //Start for loop at 2, as page 1 has already been retrieved - ceil = rounds up to nearest whole number             
-                        for($i=$this->page;$i<(ceil($total/self::LIMIT)); $i++)
+                        for($i=$this->page;$i<=(ceil($total/self::LIMIT)); $i++)
                         {
-                            $url_additional = $url.'?page='.$i.'&limit='.self::LIMIT;
+                            $pageLimitParams = array('page' => $i,'limit' => self::LIMIT);
+                            $requestParams = array_merge($parameters,$pageLimitParams);
+
                             $this->page = $i;
                             
                             $log_additional_call = ApiLog::create([
-                                'resource' => $url_additional,
+                                'resource' => $url,
                                 'method' => $method,
-                                'request' => '',
+                                'request' => json_encode($requestParams),
                             ]);
 
-                            $response = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url_additional)->body();
+                            $response = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url,$requestParams)->body();
                             $responses[] = $response;
 
                             $log_additional_call->response = $response;
