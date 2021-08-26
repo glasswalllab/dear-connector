@@ -11,7 +11,7 @@ class DearConnector
     const CONTENT_TYPE = 'application/json';
     const LIMIT = 100;
 
-    private $page = 2;
+    private $page = 2; //Set to 2 as the first call is already completed
 
     protected function getHeaders()
     {
@@ -29,12 +29,13 @@ class DearConnector
         try
         {
             //POST or PUT request - contains parameter data, no pagination required - return array
-            if ($method == 'POST' || $method == 'PUT') {
+            if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH') {
                 $requestParams['body'] = json_encode($parameters);
                 
                 $log = ApiLog::create([
                     'resource' => $url,
-                    'request' => $requestParams['body'],
+                    'method' => $method,
+                    'request' => json_encode($requestParams),
                 ]);
 
                 $responses = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url,$requestParams)->body();
@@ -44,14 +45,16 @@ class DearConnector
 
             //Any other request (GET) - no parameter, check for pagination - return array    
             } else {
-                $url_first_call = $url.'?page=1&limit='.self::LIMIT;
+                //$url_first_call = $url.'?page=1&limit='.self::LIMIT;
+                $requestParams['query'] = array('page' => 1,'limit' => self::LIMIT);
                 
                 $log_first_call = ApiLog::create([
                     'resource' => $url_first_call,
-                    'request' => '',
+                    'method' => $method,
+                    'request' => json_encode($requestParams),
                 ]);
 
-                $response = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url_first_call)->body();
+                $response = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url,$requestParams)->body();
 
                 $log_first_call->response = $response;
                 $log_first_call->save();
@@ -71,6 +74,7 @@ class DearConnector
                             
                             $log_additional_call = ApiLog::create([
                                 'resource' => $url_additional,
+                                'method' => $method,
                                 'request' => '',
                             ]);
 
