@@ -2,6 +2,8 @@
  
 This package provides an integration to DEAR Systems (https://dearsystems.com/).
 
+API Docs - https://dearinventory.docs.apiary.io/
+
 [![Latest Version](https://img.shields.io/github/release/glasswalllab/dear-connector.svg?style=flat-square)](https://github.com/glasswalllab/dear-connector/releases)
 
 ## Installation
@@ -29,6 +31,7 @@ DEAR_BASE_API_URL=https://inventory.dearsystems.com/externalapi/v2/
 ### Sample Usage (Laravel)
 
 ```php
+use glasswalllab\arofloconnector\DearConnector;
 
 //Get Customer List
 $dear = new DearConnector();
