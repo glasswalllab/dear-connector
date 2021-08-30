@@ -44,22 +44,23 @@ class DearConnector
 
                 switch($method) {
                     case 'POST':
-                        $responses = $baseCall->post($url,$parameters)->body();
+                        $call = $baseCall->post($url,$parameters);
                     break;
 
                     case 'PUT':
-                        $responses = $baseCall->put($url,$parameters)->body();
+                        $call = $baseCall->PUT($url,$parameters);
                     break;
 
                     case 'PATCH':
-                        $responses = $baseCall->patch($url,$parameters)->body();
+                        $call = $baseCall->PATCH($url,$parameters);
                     break;
 
                     case 'DELETE':
-                        $responses = $baseCall->delete($url,$parameters)->body();
+                        $call = $baseCall->DELETE($url,$parameters);
                     break;
                 }
-                
+                $responses = $call->body();
+                $log->code = $call->status();
                 $log->response = $responses;
                 $log->save();
 
@@ -75,8 +76,10 @@ class DearConnector
                     'request' => json_encode($requestParams),
                 ]);
 
-                $response = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url,$requestParams)->body();
-
+                $call = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url,$requestParams);
+                $response = $call->body();
+                $json = json_decode($response);
+                $log_first_call->code = $call->status();
                 $log_first_call->response = $response;
                 $log_first_call->save();
 
@@ -104,9 +107,10 @@ class DearConnector
                                     'request' => json_encode($requestParams),
                                 ]);
 
-                                $response = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url,$requestParams)->body();
+                                $call = Http::withHeaders($this->getHeaders())->retry(3, 500)->acceptJson()->get($url,$requestParams);
+                                $response = $call->body();
                                 $responses[] = $response;
-
+                                $log_additional_call->code = $call->status();
                                 $log_additional_call->response = $response;
                                 $log_additional_call->save();
                             }
