@@ -35,6 +35,7 @@ class DearConnector
             if ($method === 'POST' || $method === 'PUT' || $method === 'PATCH' || $method === 'DELETE') {
 
                 $log = ApiLog::create([
+                    'service' => 'dear',
                     'resource' => $url,
                     'method' => $method,
                     'request' => json_encode($parameters),
@@ -71,6 +72,7 @@ class DearConnector
                 $requestParams = array_merge($parameters,$pageLimitParams);
                 
                 $log_first_call = ApiLog::create([
+                    'service' => 'dear',
                     'resource' => $url,
                     'method' => $method,
                     'request' => json_encode($requestParams),
@@ -102,6 +104,7 @@ class DearConnector
                                 $this->page = $i;
                                 
                                 $log_additional_call = ApiLog::create([
+                                    'service' => 'dear',
                                     'resource' => $url,
                                     'method' => $method,
                                     'request' => json_encode($requestParams),
