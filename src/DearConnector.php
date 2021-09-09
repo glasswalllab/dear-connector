@@ -24,6 +24,7 @@ class DearConnector
 
     public function CallDEAR($endpoint,$method, array $parameters)
     {  
+        date_default_timezone_set('UTC');
         $url = config('DearConnector.baseUrl').$endpoint;
         
         $responses = [];
